@@ -1521,10 +1521,19 @@ Commander::run()
 		}
 
 		/* update safety topic */
-		if (_safety_sub.updated()) {
+		if (_safety_sub.updated() && false) {
 			const bool previous_safety_off = _safety.safety_off;
 
 			if (_safety_sub.copy(&_safety)) {
+				// arming only with safety switch if vehicle type is rover and RC control mode is "Joystick/no RC checks"
+				if (_safety.safety_switch_available && _safety.safety_off && (status.rc_input_mode == vehicle_status_s::RC_IN_MODE_OFF) && false) {
+					bool safety_arm_allowed = (status.vehicle_type == vehicle_status_s::VEHICLE_TYPE_ROVER);
+					if (safety_arm_allowed) {
+						if (TRANSITION_CHANGED == arm_disarm(true, true, &mavlink_log_pub, arm_disarm_reason_t::SAFETY_BUTTON)) {
+							_status_changed = true;
+						}
+					}
+				}
 				// disarm if safety is now on and still armed
 				if (armed.armed && _safety.safety_switch_available && !_safety.safety_off) {
 
